@@ -16,7 +16,8 @@ rpm-ostree install --apply-live \
     https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
 # Встановлення необхідних пакетів
-rpm-ostree install podman virt-manager
+rpm-ostree install podman virt-manager libvirt qemu-kvm virt-install bridge-utils
+systemctl enable --now libvirtd
 
 # Виявлення NVIDIA GPU та встановлення драйверів
 if lspci | grep -i nvidia; then
@@ -70,6 +71,28 @@ rpm-ostree install firewall-config
 # Встановлення та активація Fail2Ban
 rpm-ostree install fail2ban
 systemctl enable --now fail2ban
+
+# Запит користувача щодо налаштування віртуальної мережі для лабораторії
+echo "Бажаєте додати налаштування віртуальної мережі для лабораторії? (y/n)"
+read -r setup_lab_network
+if [[ "$setup_lab_network" == "y" ]]; then
+    echo "Створюємо віртуальну мережу для лабораторії..."
+    cat <<EOF > /etc/libvirt/qemu/net-lab.xml
+<network>
+  <name>lab</name>
+  <bridge name="virbr1"/>
+  <forward mode="nat"/>
+  <ip address="192.168.100.1" netmask="255.255.255.0">
+    <dhcp>
+      <range start="192.168.100.50" end="192.168.100.200"/>
+    </dhcp>
+  </ip>
+</network>
+EOF
+    virsh net-define /etc/libvirt/qemu/net-lab.xml
+    virsh net-autostart lab
+    virsh net-start lab
+fi
 
 # Налаштування SSH
 echo "Бажаєте встановити та увімкнути SSH? (y/n)"
