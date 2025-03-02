@@ -26,6 +26,11 @@ else
     echo "NVIDIA GPU не знайдено, пропускаємо встановлення драйверів."
 fi
 
+# Встановлення мультимедійних кодеків
+rpm-ostree install gstreamer1-libav gstreamer1-plugins-bad-free gstreamer1-plugins-bad-freeworld \
+    gstreamer1-plugins-ugly gstreamer1-plugins-ugly-free gstreamer1-plugins-good gstreamer1-plugins-base \
+    ffmpeg-libs
+
 # Перевірка дозволів Flatpak
 if command -v flatpak &> /dev/null; then
     echo "Перевіряємо дозволи Flatpak..."
